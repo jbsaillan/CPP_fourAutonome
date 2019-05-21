@@ -1,0 +1,16 @@
+
+#ifndef CONSTANTES_H
+#define CONSTANTES_H
+
+
+#define PIN_LED_ETAT 14
+#define PIN_LED_TEMPERATURE 7
+
+#define PIN_SERVO 3
+#define PIN_OUVERTURE 5
+
+#define PIN_CAPTEUR_TEMPERATURE A0
+
+#define T_AMBIANT 25
+
+#endif
