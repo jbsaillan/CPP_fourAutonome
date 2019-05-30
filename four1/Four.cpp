@@ -85,10 +85,11 @@ void Four::sendTemperature() {
 
 void Four::allume() {
 	//On allume le four
-  if(m_porte->getOuverture()) {
+  //if(m_porte->getOuverture()) {
       m_etat = true;
       digitalWrite(m_ledEtat, HIGH);
-  }
+      Serial.println("Led allumée");
+  //}
 }
 
 void Four::eteint() {
@@ -100,11 +101,11 @@ void Four::eteint() {
 void Four::setPlat(String const& plat) {
   bool bonPlat = true;
   if(plat == "poulet") {
-    m_plat = new Viande(20);
+    m_plat = new Viande(1);
   } else if(plat == "dinde") {
-    m_plat = new Viande(10);
+    m_plat = new Viande(3);
   } else if(plat == "boeuf") {
-    m_plat = new Viande(40);
+    m_plat = new Viande(2);
   } else if(plat == "croziflette") {
     m_plat = new Gratin(40);
   } else if(plat == "dauphinois") {
@@ -130,9 +131,18 @@ void Four::setPlat(String const& plat) {
 
 void Four::routine() {
   //verifier que le four s'allume bien
+  mesureTemperature();
+  
   if(m_plat != NULL) {
-    m_plat->setTempsRestant(m_plat->getTempsInitial()- millis());
+    //Serial.println("Il y a un plat dans le four.");
+    //Serial.println(millis()-m_tempsDepart);
+    Date temp=m_plat->getTempsInitial()- (millis()-m_tempsDepart);;
+    //Serial.print(temp.m_heures);
+    //Serial.println(temp.m_minutes);
+    m_plat->setTempsRestant(temp);
 
+    Serial.print(m_plat->getTempsRestant().m_heures);
+    Serial.print(" : ");
     Serial.println(m_plat->getTempsRestant().m_minutes);
   }
 }

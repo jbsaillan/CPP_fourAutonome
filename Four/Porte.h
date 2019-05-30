@@ -10,8 +10,6 @@
 #ifndef PORTE_H
 #define PORTE_H
 
-#include <ESP8266WiFi.h>
-
 /**
  * @class Porte
  * @brief Classe representant la porte du four
@@ -36,19 +34,12 @@ public:
 	 * @fn fermePorte()
 	 * @brief Ferme la porte du four
 	 */
-	void fermePorte();
-
-  /**
-   * @fn getOuverture()
-   * @brief Detecte la position de la porte du four
-   */
-  bool getOuverture();
+	void femrePorte();
 
 private:
 
 	bool m_etatOuverture; //<! Variable de classe representant l'etat d'ouverture de la porte
 	int m_servoMoteur; //<! Variable de classe avec la pin de controle du servomoteur
-  int m_pinOuverture; //<! variable de classe avec la pin du cateur d'ouverture
 
 };
 

@@ -10,7 +10,6 @@
 #ifndef DATE_H
 #define DATE_H
 
-
 /**
  * @class Date
  * @brief Classe representant une date
@@ -42,6 +41,7 @@ public:
     m_minutes = m_minutes % 60;
     //On calcule le nombre d'heures
     m_heures = x*m_heures + j;
+    return *this;
   };
 
 
@@ -49,17 +49,20 @@ public:
    * @fn operator-()
    * @brief On surcharge l'operation de soustraction avec des millisecondes
    */
-  Date operator-(const int& milli) {
+  Date& operator -=(const int& milli) {
     int heures = milli/(1000*3600);
     int minutes = (milli - heures*(1000*3600))/(1000*60);
-
-    m_minutes = m_minutes - minutes;
+    
+   m_minutes = m_minutes - minutes;
     if(m_minutes < 0) {
       m_heures -= 1; 
-      m_minutes = 60 + m_minutes;
+      m_minutes = 60 +m_minutes;
     }
-    m_heures -= heures;  
+    m_heures -= heures;
+    return (*this);  
   };
+
+
 
 //private:
 
@@ -68,6 +71,12 @@ public:
 
 };
 
+inline Date operator -(const Date & un, const int& milli)
+{
+  Date temp = un;
+  temp-=milli;
+  return temp;
+};
 
 
 

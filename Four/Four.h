@@ -10,17 +10,11 @@
 #ifndef FOUR_H
 #define FOUR_H
 
-#include <ESP8266WiFi.h>
-
 #include <list>
 
-#include "Date.h"
-#include "Plat.h"
+#include "../Date/Date.h"
+#include "../Plat/Plat.h"
 #include "Porte.h"
-
-//Constantes pour le calcul de température
-#define COEFF_B 4275
-#define COEFF_R0 100000
 
 
 /**
@@ -44,12 +38,6 @@ public:
 	//~Four();
 
 	/**
-	 * @fn Init()
-	 * @brief Initialise les pins nécessaires
-	 */
-	void init();
-
-	/**
 	 * @fn setTemperatureFour()
 	 * @brief Actualise la temperature consigne du four
 	 * @param temp Temperature consigne choisie
@@ -63,24 +51,11 @@ public:
 	 */
 	float getTemperatureFour();
 
-  /**
-   * @fn getEtat()
-   * @brief Renvoie l'etat allume/eteint du four
-   * @return Derniere etat du four
-   */
-  bool getEtat();
-
 	/**
 	 * @fn mesureTemperature()
 	 * @brief Mesure la temperature actuelle et l'enregistre
 	 */
 	void mesureTemperature();
-
-   /**
-   * @fn getDerniereTemperature()
-   * @brief Renvoie la dernière température mesurée
-   */
-  float getDerniereTemperature();
 
 	/**
 	 * @fn sendTemperature()
@@ -105,29 +80,19 @@ public:
 	 * @brief Met un plat dans le four
 	 * @param plat Plat à mettre dans le four
 	 */
-	void setPlat(String const& plat);
+	void setPlat(Plat const& plat);
 
-
-    /**
-   * @fn routine()
-   * @brief Calcule le temps restant pour une cuisson
-   */
-  void routine();
-
-	Porte * m_porte; //<! Variable de classe pointant vers la porte
-  
 private:
 	float m_temperatureConsigne; //<! Variable de classe contenant la consigne
+	std::list<float> m_temperaturesMesurees; //<! Variable de classe enregistrant les mesures
 	bool m_etat; //<! Variable de classe indiquant l'etat allume/eteint du four
+
 	Plat * m_plat; //<! Variable de classe pointant sur le plat dans le four
-  std::list<float> m_temperaturesMesurees; //<! Variable de classe enregistrant les mesures
+	Porte * m_porte; //<! Variable de classe pintant vers la porte
+
 	int m_capteurTemperaturePin; //<! Variable de classe donnant la pin du capteur de temperature
 	int m_ledEtat; //<! Variable de classe donnant la pin de la LED d'etat
 	int m_ledTemperature; //<! Variable de classe donnant la pin de la LED de temperature
-	int m_valeurConsigneLed; //<! Variable de classe donnant la consigne de luminosité
-
-  int m_tempsDepart; //<!On regarde a quel moment on a mis un plat au four !
-  
 };
 
 

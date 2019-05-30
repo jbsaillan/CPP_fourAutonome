@@ -10,7 +10,6 @@
 #ifndef VIANDE_H
 #define VIANDE_H
 
-#include "Date.h"
 
 /**
  * @class Viande
@@ -24,14 +23,13 @@ public:
 	 * @fn Viande()
 	 * @brief Constructeur par défaut de la classe Viande
      */
-	Viande(int poids) : Plat(Date(1, 2), 180) {
-	  m_poids = poids;
-	};
+	Viande();
 
 
 private:
 
-	int m_poids; //<! Poids du morceau de viande
+	float m_poids; //<! Poids du morceau de viande
+	//+ le type de tarte
 
 };
 

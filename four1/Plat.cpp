@@ -21,6 +21,8 @@ Plat::Plat(Date tempsCuisson, float temperature) :
 
 void Plat::setTempsRestant(Date t) {
 	//on actualise le temps de cuisson restant
+  m_tempsRestant.m_heures=t.m_heures;
+  m_tempsRestant.m_minutes=t.m_minutes;
 }
 
 Date Plat::getTempsRestant() {
@@ -29,4 +31,14 @@ Date Plat::getTempsRestant() {
 
 Date Plat::getTempsInitial() {
   return m_tempsInitial;
+}
+
+int Plat::getTempsRestantMinutes()
+{
+  return m_tempsRestant.m_heures*60+m_tempsRestant.m_minutes;
+}
+
+int  Plat::getTemperatureCuisson()
+{
+  return m_temperatureCuisson;
 }

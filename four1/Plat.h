@@ -10,6 +10,8 @@
 #ifndef PLAT_H
 #define PLAT_H
 
+#include "Date.h"
+
 
 /**
  * @class Porte
@@ -22,8 +24,10 @@ public:
 	/**
 	 * @fn Plat()
 	 * @brief Constructeur par défaut de la classe Plat
+	 * @param tempsCuisson Le temps de cuisson de base nécessaire
+	 * @param temperature La temperature de cuisson
      */
-	Plat();
+	Plat(Date tempsCuisson, float temperature);
 
 	/**
 	 * @fn setTempsRestant()
@@ -39,11 +43,20 @@ public:
      */
 	Date getTempsRestant();
 
-private:
+  int getTempsRestantMinutes();
+  /**
+   * @fn getTempsInitial()
+   * @brief Donne le temps initial pour la cuisson du plat
+   * @return Temps initial
+     */
+  Date getTempsInitial();
 
+  int  getTemperatureCuisson();
+
+private:
 	Date m_tempsRestant; //<! Temps restant pour la cuisson
-	Date m_tempsInitial //<! Temps de bas pour la cuisson
-	float m_temperatureCuisson; //<! Temperature encessaire pour cuire le plat
+	Date m_tempsInitial; //<! Temps de base pour la cuisson
+	int m_temperatureCuisson; //<! Temperature encessaire pour cuire le plat
 
 };
 
