@@ -10,6 +10,8 @@
 #ifndef GRATIN_H
 #define GRATIN_H
 
+#include "Date.h"
+
 
 /**
  * @class Gratin
@@ -23,11 +25,13 @@ public:
 	 * @fn Gratin()
 	 * @brief Constructeur par défaut de la classe Gratin
      */
-	Gratin();
+	Gratin(int hauteur) : Plat(Date(1, 2), 280) {
+	  m_hauteur = hauteur;
+	};
 
 private:
 
-	float m_hauteur; //<! Hauteur de notre gratin
+	int m_hauteur; //<! Hauteur de notre gratin
 	//+ le type de tarte
 
 };

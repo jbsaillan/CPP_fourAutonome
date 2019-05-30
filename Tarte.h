@@ -10,6 +10,7 @@
 #ifndef TARTE_H
 #define TARTE_H
 
+#include "Date.h"
 
 /**
  * @class Tarte
@@ -23,13 +24,15 @@ public:
 	 * @fn Tarte()
 	 * @brief Constructeur par défaut de la classe Tarte
      */
-	Tarte();
+	Tarte(int surface) : Plat(Date(2, 1), 220) {
+	  m_surface = surface;
+	};
 
 
 private:
 
-	float m_surface; //<! Surface de notre tarte
-	//+ le type de tarte
+	int m_surface; //<! Surface de notre tarte
+
 
 };
 

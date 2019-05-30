@@ -26,6 +26,7 @@ WiFiClient client;
 Adafruit_MQTT_Client mqtt(&client, MQTT_SERV, MQTT_PORT, MQTT_NAME, MQTT_PASS);
 //Set up the feed you're subscribing to
 Adafruit_MQTT_Subscribe onoff = Adafruit_MQTT_Subscribe(&mqtt, MQTT_NAME "/f/smartoven-feed.oven-onoff");
+Adafruit_MQTT_Subscribe recevoirPlats = Adafruit_MQTT_Subscribe(&mqtt, MQTT_NAME "/f/smartoven-feed.plat");
 //On creer le feed auquel envoyer des données
 Adafruit_MQTT_Publish listTemp = Adafruit_MQTT_Publish(&mqtt, MQTT_NAME "/f/smartoven-feed.temperature-observed");
 
@@ -59,25 +60,40 @@ void setup() {
   
    //Subscribe to the onoff feed
    mqtt.subscribe(&onoff);
+      //Subscribe to the recevoirPlat feed
+   mqtt.subscribe(&recevoirPlats);
 
    delay(500);
    //On initialise le four
    monFour->init(); 
 }
 
+
+
 void loop() {
 
-  Serial.println(monFour->m_porte->getOuverture());
   
   MQTT_connect();
   
-  //On récupere les data relatives au on/off
+    //On récupere les data relatives au on/off
     Adafruit_MQTT_Subscribe * subscription;
     while ((subscription = mqtt.readSubscription(2000)))
     {
+       if (subscription == &recevoirPlats) {
+        //Print the new value to the serial monitor
+        String plat = (char*) recevoirPlats.lastread;
+        //On met le string en minuscule
+        std::transform(plat.begin(), plat.end(), plat.begin(), ::tolower);
+
+        Serial.print("Recevoir Plats: ");
+        Serial.println(plat);
+        
+        monFour->setPlat(plat);
+      }
+
+      
       //If we're in here, a subscription updated...
-      if (subscription == &onoff)
-      {
+      if (subscription == &onoff) {
         //Print the new value to the serial monitor
         Serial.print("onoff: ");
         Serial.println((char*) onoff.lastread);
@@ -104,13 +120,11 @@ void loop() {
     }
 
 
+    //Le four joue son rôle
+    monFour->routine();
 
 
-  // ping the server to keep the mqtt connection alive
-  if (!mqtt.ping())
-  {
-    mqtt.disconnect();
-  }
+
 
 }
 

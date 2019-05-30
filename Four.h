@@ -63,6 +63,13 @@ public:
 	 */
 	float getTemperatureFour();
 
+  /**
+   * @fn getEtat()
+   * @brief Renvoie l'etat allume/eteint du four
+   * @return Derniere etat du four
+   */
+  bool getEtat();
+
 	/**
 	 * @fn mesureTemperature()
 	 * @brief Mesure la temperature actuelle et l'enregistre
@@ -98,7 +105,14 @@ public:
 	 * @brief Met un plat dans le four
 	 * @param plat Plat à mettre dans le four
 	 */
-	void setPlat(Plat const& plat);
+	void setPlat(String const& plat);
+
+
+    /**
+   * @fn routine()
+   * @brief Calcule le temps restant pour une cuisson
+   */
+  void routine();
 
 	Porte * m_porte; //<! Variable de classe pointant vers la porte
   
@@ -111,6 +125,9 @@ private:
 	int m_ledEtat; //<! Variable de classe donnant la pin de la LED d'etat
 	int m_ledTemperature; //<! Variable de classe donnant la pin de la LED de temperature
 	int m_valeurConsigneLed; //<! Variable de classe donnant la consigne de luminosité
+
+  int m_tempsDepart; //<!On regarde a quel moment on a mis un plat au four !
+  
 };
 
 

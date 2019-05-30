@@ -10,6 +10,10 @@
 #include "Four.h"
 #include "CONSTANTES.h"
 
+#include "Viande.h"
+#include "Gratin.h"
+#include "Tarte.h"
+
 #include <math.h>
 
 
@@ -46,6 +50,10 @@ float Four::getTemperatureFour() {
   } else {
     return -1;
   }
+}
+
+bool Four::getEtat() {
+  return m_etat;
 }
 
 void Four::mesureTemperature() {
@@ -89,6 +97,42 @@ void Four::eteint() {
 	digitalWrite(m_ledEtat, LOW);
 }
 
-void Four::setPlat(Plat const& plat) {
-	//On stocke le plat
+void Four::setPlat(String const& plat) {
+  bool bonPlat = true;
+  if(plat == "poulet") {
+    m_plat = new Viande(20);
+  } else if(plat == "dinde") {
+    m_plat = new Viande(10);
+  } else if(plat == "boeuf") {
+    m_plat = new Viande(40);
+  } else if(plat == "croziflette") {
+    m_plat = new Gratin(40);
+  } else if(plat == "dauphinois") {
+    m_plat = new Gratin(7);
+  } else if(plat == "courgette") {
+    m_plat = new Gratin(15);  
+  } else if(plat == "tarte aux pommes") {
+    m_plat = new Tarte(11);  
+  } else if(plat == "tarte au chocolat") {
+    m_plat = new Tarte(9);  
+  } else if(plat == "tarte aux citrons") {
+    m_plat = new Tarte(10); 
+  } else {
+    bonPlat = false;
+  }
+
+  if(bonPlat) {
+    this->allume();
+    m_tempsDepart = millis();
+  }
+}
+
+
+void Four::routine() {
+  //verifier que le four s'allume bien
+  if(m_plat != NULL) {
+    m_plat->setTempsRestant(m_plat->getTempsInitial()- millis());
+
+    Serial.println(m_plat->getTempsRestant().m_minutes);
+  }
 }

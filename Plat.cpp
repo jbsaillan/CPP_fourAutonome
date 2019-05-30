@@ -26,3 +26,7 @@ void Plat::setTempsRestant(Date t) {
 Date Plat::getTempsRestant() {
 	return m_tempsRestant;
 }
+
+Date Plat::getTempsInitial() {
+  return m_tempsInitial;
+}

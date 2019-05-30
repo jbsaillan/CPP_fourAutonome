@@ -43,6 +43,13 @@ public:
      */
 	Date getTempsRestant();
 
+  /**
+   * @fn getTempsInitial()
+   * @brief Donne le temps initial pour la cuisson du plat
+   * @return Temps initial
+     */
+  Date getTempsInitial();
+
 private:
 
 	Date m_tempsRestant; //<! Temps restant pour la cuisson
