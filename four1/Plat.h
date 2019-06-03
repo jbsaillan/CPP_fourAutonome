@@ -43,7 +43,14 @@ public:
      */
 	Date getTempsRestant();
 
+  /**
+   * @fn getTempsRestantMinutes()
+   * @brief Donne le temps restant pour la cuisson du plat en minutes
+   * @return Temps restant en minutes
+     */
   int getTempsRestantMinutes();
+
+  
   /**
    * @fn getTempsInitial()
    * @brief Donne le temps initial pour la cuisson du plat
@@ -51,12 +58,17 @@ public:
      */
   Date getTempsInitial();
 
-  int  getTemperatureCuisson();
+  /**
+   * @fn getTemperatureCuisson()
+   * @brief Donne la temperature de cuisson
+   * @return temperature de cuisson
+     */
+  int getTemperatureCuisson();
 
 private:
-	Date m_tempsRestant; //<! Temps restant pour la cuisson
-	Date m_tempsInitial; //<! Temps de base pour la cuisson
-	int m_temperatureCuisson; //<! Temperature encessaire pour cuire le plat
+	Date m_tempsRestant; //<! Variable membre pour le temps restant pour la cuisson
+	Date m_tempsInitial; //<! Variable membre pour le temps de base pour la cuisson
+	int m_temperatureCuisson; //<! Variable membre pour la temperature necessaire pour cuire le plat
 
 };
 

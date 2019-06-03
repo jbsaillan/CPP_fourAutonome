@@ -15,12 +15,12 @@ Plat::Plat(Date tempsCuisson, float temperature) :
 	m_tempsInitial(tempsCuisson),
 	m_temperatureCuisson(temperature)
 {
-	//Il faut définir tout ça suivant les types
 }
 
 
 void Plat::setTempsRestant(Date t) {
-	//on actualise le temps de cuisson restant
+	//On actualise le temps de cuisson restant
+  //On pourra redefinir l'operateur d'affectation (plus tard)
   m_tempsRestant.m_heures=t.m_heures;
   m_tempsRestant.m_minutes=t.m_minutes;
 }

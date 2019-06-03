@@ -25,14 +25,28 @@ public:
 	 * @fn Gratin()
 	 * @brief Constructeur par défaut de la classe Gratin
      */
-	Gratin(int hauteur) : Plat(Date(1, 2), 280) {
-	  m_hauteur = hauteur;
+	Gratin(int hauteur) : Plat(Date(0, 5)*hauteur, 230) , m_hauteur(hauteur)  {
 	};
+
+   /**
+   * @fn getHauteur()
+   * @brief assesseur de l'attribut hauteur
+     */
+  int getHauteur() {
+    return m_hauteur;
+  }
+
+  /**
+   * @fn setHauteur()
+   * @brief assesseur de l'attribut hauteur
+     */
+  void setHauteur(int hauteur) {
+    if(hauteur >= 0) m_hauteur = hauteur;
+  }
 
 private:
 
 	int m_hauteur; //<! Hauteur de notre gratin
-	//+ le type de tarte
 
 };
 

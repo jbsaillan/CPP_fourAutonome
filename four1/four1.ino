@@ -2,11 +2,14 @@
 
 //Bibliothèques "arduino" nécessaires
 #include <ESP8266WiFi.h>
+#include <Servo.h>
+#include <Ticker.h>
 #include "Adafruit_MQTT.h"
 #include "Adafruit_MQTT_Client.h"
 
 //Bibliothèques std
 #include <list>
+#include <string>
 
 //Bibliothèques perso
 #include "CONSTANTES.h"
@@ -24,36 +27,31 @@
 //Set up MQTT and WiFi clients
 WiFiClient client;
 Adafruit_MQTT_Client mqtt(&client, MQTT_SERV, MQTT_PORT, MQTT_NAME, MQTT_PASS);
-//Set up the feed you're subscribing to
+
+//Créations des feeds auxquels on s'abonne
 Adafruit_MQTT_Subscribe onoff = Adafruit_MQTT_Subscribe(&mqtt, MQTT_NAME "/f/smartoven-feed.oven-onoff");
 Adafruit_MQTT_Subscribe recevoirPlats = Adafruit_MQTT_Subscribe(&mqtt, MQTT_NAME "/f/smartoven-feed.plat");
-//On creer le feed auquel envoyer des données
+Adafruit_MQTT_Subscribe recevoirTemperature = Adafruit_MQTT_Subscribe(&mqtt, MQTT_NAME "/f/smartoven-feed.temperature-cible");
+
+//Crétions des feeds auxquels on everra des données
+//A noter que pour les data bidirectionnelles, on crée le "susbcribe" et le "publish"
 Adafruit_MQTT_Publish listTemp = Adafruit_MQTT_Publish(&mqtt, MQTT_NAME "/f/smartoven-feed.temperature-observed");
-//On crée le feed pour la mise à jour du temps de cuisson
 Adafruit_MQTT_Publish minuteur = Adafruit_MQTT_Publish(&mqtt, MQTT_NAME "/f/smartoven-feed.minuteur");
-
 Adafruit_MQTT_Publish temp_cible = Adafruit_MQTT_Publish(&mqtt, MQTT_NAME "/f/smartoven-feed.temperature-cible");
-
-
 Adafruit_MQTT_Publish p_onoff = Adafruit_MQTT_Publish(&mqtt, MQTT_NAME "/f/smartoven-feed.oven-onoff");
 
+//Objet ticker pour gérer le clignottement de la LED par interruption
+Ticker blinker;
 
-
-/**
- * Creation four (avec porte)
- * 
- * Variables mqt patati patata
- *  connexion wifi
- *  
- */
- bool sendTemp = false;
-
- Four * monFour = new Four();
+//Création de notre objet four
+Four * monFour = new Four();
 
 
 void setup() {
    Serial.begin(9600);
-    Serial.println("Le capteur d'ouverture n'est pas utilisé pour l'allumage du four.\nVeuillez décommenter les lignes correspondantes dans le fichier Four.cpp");
+   
+   Serial.println("Le capteur d'ouverture n'est pas utilisé pour l'allumage du four.\nVeuillez décommenter les lignes correspondantes dans le fichier Four.cpp");
+   
    //Connect to WiFi
    Serial.print("\n\nConnecting Wifi... ");
    WiFi.begin(WIFI_SSID, WIFI_PASS);
@@ -68,12 +66,17 @@ void setup() {
   
    //Subscribe to the onoff feed
    mqtt.subscribe(&onoff);
-      //Subscribe to the recevoirPlat feed
+   //Subscribe to the recevoirPlat feed
    mqtt.subscribe(&recevoirPlats);
-
+   //Subscribe to the recevoirTemperature feed
+   mqtt.subscribe(&recevoirTemperature);
    delay(500);
+   
    //On initialise le four
-   monFour->init(); 
+   monFour->init();
+
+   //On initialise le timer qui déclenche la fonction pour faire clignotter la LED
+   blinker.attach(0.1, checkLEDFour);
 }
 
 
@@ -81,99 +84,122 @@ void setup() {
 void loop() {
 
   
-  MQTT_connect();
+    MQTT_connect();
   
-    //On récupere les data relatives au on/off
+    /*
+     * On récupère, s'il y en a, les données venant de l'application web
+     */
+     
     Adafruit_MQTT_Subscribe * subscription;
     while ((subscription = mqtt.readSubscription(10000)))
     {
-       if (subscription == &recevoirPlats) {
-        //Print the new value to the serial monitor
-        String plat = (char*) recevoirPlats.lastread;
-        //On met le string en minuscule
-        std::transform(plat.begin(), plat.end(), plat.begin(), ::tolower);
-
-        Serial.print("Recevoir Plats: ");
-        Serial.println(plat);
-        
-        monFour->setPlat(plat);
-         if(temp_cible.publish(monFour->m_plat->getTemperatureCuisson()))
-        {  
-           Serial.println("Temperature_cible sent !");
-        } else {
-           Serial.println("Failed to send Temperature_cible");
-        }
-
-         if(p_onoff.publish("ON"))
-        {  
-           Serial.println("ON sent !");
-        } else {
-           Serial.println("Failed to send ON");
-        }
-
-        
-      }
-
       
-      //If we're in here, a subscription updated...
+      //Si on reçoit une data concernant un plat à mettre au four
+      if (subscription == &recevoirPlats) {
+        
+       //On met le string en minuscule
+       String plat = (char*) recevoirPlats.lastread;
+       std::transform(plat.begin(), plat.end(), plat.begin(), ::tolower);
+
+       Serial.print("Recevoir Plats: ");
+       Serial.println(plat);
+
+       //On tente de mettre le plat dans le four
+       //On tente ensuite d'allumer le four
+       monFour->setPlat(plat); 
+      }
+      
+      //Si on reçoit une data concernant l'allumage du four
       if (subscription == &onoff) {
-        //Print the new value to the serial monitor
+        //On affiche la valeur reçue
         Serial.print("onoff: ");
         Serial.println((char*) onoff.lastread);
         
-        //If the new value is  "ON", turn the light on.
-        //Otherwise, turn it off.
-        if (!strcmp((char*) onoff.lastread, "ON"))
-        {
+        //Si la valeur est ON, on allume le four
+        //Si la valeur est OFF, on eteint le four
+        if (!strcmp((char*) onoff.lastread, "ON")){
+          //Attention, l'allumage peut aussi dépendre de l'etat de la porte du four
           monFour->allume();
-         // Serial.println("Le four est allumé.");
-        }
-        else
-        {
+        } else{
           monFour->eteint();
-        //  Serial.println("Le four est éteint.");
        }
       }
+      
+      //Si on reçoit une data concernant la temperature consigne du four
+      if (subscription == &recevoirTemperature) {
+        //On convertir la valeur reçue (string) en numérique (float)
+        float tempRecue = (float)atof((char*)recevoirTemperature.lastread);
+        Serial.print("Nouvelle temperature consigne: ");
+        Serial.println(tempRecue);
+        //On actualise la temperature consigne du four
+        monFour->setTemperatureFour(tempRecue);
+      }
+      
     }
 
-    //On envoie les donnees sur la temperature
-    //monFour->mesureTemperature();
+
+    /*
+     * On simule le comportement du four
+     */
+
+    //Le four realise sa routine (mesure de temperature, decompte du temps de cuisson etc)
     monFour->routine();
+
+
+
+    /*
+     * On envoie à l'application web certaines données issues du four
+     */
+     
+    //On envoie à l'pplication l'etat allumé/éteint du four
+    //Cela est utile au cas où on veuille l'allumer mais que ce n'est pas possible (le bouton retourne en "off)
+    char * etatFour = "OFF";
+    if(monFour->getEtat()) etatFour = "ON";
+    if(p_onoff.publish((char*)etatFour)){  
+      Serial.println("Etat four sent !");
+    } else {
+      Serial.println("Failed to send etatFour");
+    }
     
+    //On envoie à l'application web la température réelle du four
     if(listTemp.publish(monFour->getTemperatureFour())) {
         Serial.println("Temp sent !");
     } else {
         Serial.println("Failed to send temp");
     }
-    //delay(100);
-    
-    if(monFour->m_plat!=NULL)
-    {
-        if(minuteur.publish(monFour->m_plat->getTempsRestantMinutes()))
-        {  
+
+    //S'il y a un plat, on envoie à l'application web le temps de cuisson restant
+    if(monFour->m_plat != NULL) {
+        if(minuteur.publish(monFour->m_plat->getTempsRestantMinutes())) {  
            Serial.println("Time sent !");
         } else {
            Serial.println("Failed to send time");
         }
-        
+    }
+    
+    //Envoie la temperature consigne elle est fixée par le plat dans le four ou directement par l'utilisateur
+    if(temp_cible.publish(monFour->getDerniereTemperatureConsigne())) {  
+      Serial.println("Temperature Consigne sent !");
+    } else {
+      Serial.println("Failed to send Temperature Consigne");
     }
     
     
-
-
-    //Le four joue son rôle
-    
-   
+}
 
 
 
-
+//Fonction déclenchée sous interruption
+void checkLEDFour() {
+  //Permet d'assurer le clignottement de la LED 
+  monFour->clignottementLED();
 }
 
 
 
 /*
  * Fonction spéciale MQTT
+ * elle vient de l'exemple de code fourni
  */
 void MQTT_connect() 
 {

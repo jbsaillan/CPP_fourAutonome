@@ -26,7 +26,7 @@ Four::Four() :
 	m_capteurTemperaturePin(A0),
 	m_ledEtat(PIN_LED_ETAT),
 	m_ledTemperature(PIN_LED_TEMPERATURE),
-	m_valeurConsigneLed(1023/2)
+	m_previousTimeLED(0)
 {
 }
 
@@ -34,8 +34,10 @@ void Four::init() {
 	//On initialise les LEDs
 	pinMode(m_ledTemperature, OUTPUT);
 	pinMode(m_ledEtat, OUTPUT);
-	//digitalWrite(m_ledTemperature, LOW);
+	digitalWrite(m_ledTemperature, LOW);
 	digitalWrite(m_ledEtat, LOW);
+  //On initialise la porte
+  m_porte->init();
 }
 
 
@@ -45,6 +47,7 @@ void Four::setTemperatureFour(float temp) {
 }
 
 float Four::getTemperatureFour() {
+  //Si on a mesuré des températures, on envoie la dernière lue
   if(m_temperaturesMesurees.size() > 0) {
 	  return m_temperaturesMesurees.back();
   } else {
@@ -53,53 +56,49 @@ float Four::getTemperatureFour() {
 }
 
 bool Four::getEtat() {
+  //On renvoie si le four est allumé ou non
   return m_etat;
 }
 
 void Four::mesureTemperature() {
-	//On mesure une temperature
+	//On mesure une temperature en °C
   float R = 1023.0/analogRead(m_capteurTemperaturePin) -1.0;
   R = COEFF_R0 * R;
   float temp = 1.0/(log(R/(COEFF_R0))/(COEFF_B)+1/298.15)-273.15;
-  //On stocke la température
+  //On stocke la température dans la liste
   m_temperaturesMesurees.push_back(temp);
 
-  //On supprime les vieux éléments
+  //On supprime les vieux éléments si la liste est trop grande
   if(m_temperaturesMesurees.size() > 100) m_temperaturesMesurees.pop_front();
-  
-  //On actualise la luminosité de la led pour simuler la résistance
-  if(temp < m_temperatureConsigne) {
-  	m_valeurConsigneLed += 100;
-  } else {
-  	m_valeurConsigneLed -= 100;
-  }
-  if(m_valeurConsigneLed > 1023) m_valeurConsigneLed = 1023;
-  if(m_valeurConsigneLed < 0 || !m_etat) m_valeurConsigneLed = 0;
-  analogWrite(m_ledTemperature, m_valeurConsigneLed);
 }
 
-
-void Four::sendTemperature() {
-	//On evoie une mesure au serveur
+//On renvoie la temperature consigne
+float Four::getDerniereTemperatureConsigne() {
+  return m_temperatureConsigne;
 }
 
 void Four::allume() {
-	//On allume le four
+	//On allume le four si la porte est fermée
   //if(m_porte->getOuverture()) {
       m_etat = true;
       digitalWrite(m_ledEtat, HIGH);
       Serial.println("Led allumée");
-  //}
+  /*} else {
+    m_porte->fermePorte();
+  }*/
 }
 
 void Four::eteint() {
 	//On eteint le four
 	m_etat = false;
 	digitalWrite(m_ledEtat, LOW);
+  //On ouvre la porte
+  m_porte->ouvrePorte();
 }
 
 void Four::setPlat(String const& plat) {
   bool bonPlat = true;
+  //Suivant le string passé ene entrée, on enfourne un plat (ce dernier doit être connu par le four) 
   if(plat == "poulet") {
     m_plat = new Viande(1);
   } else if(plat == "dinde") {
@@ -113,7 +112,7 @@ void Four::setPlat(String const& plat) {
   } else if(plat == "courgette") {
     m_plat = new Gratin(15);  
   } else if(plat == "tarte aux pommes") {
-    m_plat = new Tarte(11);  
+    m_plat = new Tarte(10);  
   } else if(plat == "tarte au chocolat") {
     m_plat = new Tarte(9);  
   } else if(plat == "tarte aux citrons") {
@@ -121,28 +120,55 @@ void Four::setPlat(String const& plat) {
   } else {
     bonPlat = false;
   }
-
+  //Si le plat était connu, on allume le four
   if(bonPlat) {
     this->allume();
+    this->setTemperatureFour(m_plat->getTemperatureCuisson());
     m_tempsDepart = millis();
   }
 }
 
 
 void Four::routine() {
-  //verifier que le four s'allume bien
+  //On mesure une température
   mesureTemperature();
   
-  if(m_plat != NULL) {
-    //Serial.println("Il y a un plat dans le four.");
-    //Serial.println(millis()-m_tempsDepart);
-    Date temp=m_plat->getTempsInitial()- (millis()-m_tempsDepart);;
-    //Serial.print(temp.m_heures);
-    //Serial.println(temp.m_minutes);
-    m_plat->setTempsRestant(temp);
+  //Quand le four est allumé
+  if(m_etat) {
+    //S'il y a un plat en train de cuire
+    if(m_plat != NULL) {
+      //On calcule le temps restant de cuisson
+      Date tempsRestant = m_plat->getTempsInitial() - (millis()- m_tempsDepart);
+      m_plat->setTempsRestant(tempsRestant);
+  
+      Serial.print(m_plat->getTempsRestant().m_heures);
+      Serial.print(" : ");
+      Serial.println(m_plat->getTempsRestant().m_minutes);
+    }
+  }
+}
 
-    Serial.print(m_plat->getTempsRestant().m_heures);
-    Serial.print(" : ");
-    Serial.println(m_plat->getTempsRestant().m_minutes);
+
+void Four::clignottementLED() {
+  //Si le four est allumé
+  if(m_etat) {
+    //On calcule la periode du clignottement suivant la temperature
+    int consigneClignottement = 100;
+    if(m_temperatureConsigne < 80) {
+      consigneClignottement = 20;
+    } else if(m_temperatureConsigne < 150) {
+      consigneClignottement = 5;
+    } else if(m_temperatureConsigne < 400) {
+      consigneClignottement = 1;
+    }
+    //Si la période est écoulée
+    if(m_previousTimeLED > consigneClignottement) {
+      //La LED change d'état
+      m_previousTimeLED = 0;
+      digitalWrite(m_ledTemperature, !digitalRead(m_ledTemperature));
+    } else {
+      m_previousTimeLED++;
+    }
+
   }
 }

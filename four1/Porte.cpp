@@ -13,18 +13,26 @@
 
 Porte::Porte() :
 	m_etatOuverture(false),
-	m_servoMoteur(PIN_SERVO),
-  m_pinOuverture(PIN_OUVERTURE)
+	m_pinServoMoteur(PIN_SERVO),
+  m_pinOuverture(PIN_OUVERTURE),
+  m_servoMoteur(new Servo())
 {
+}
+
+void Porte::init() {
+  //Initialisation du servomoteur
+  m_servoMoteur->attach(m_pinServoMoteur);
 }
 
 
 void Porte::ouvrePorte() {
-	//On ouvre la porte du four
+  //On ouvre la porte
+	m_servoMoteur->write(30);
 }
 
 void Porte::fermePorte() {
-	//On ferme la porte du four
+  //On ferme la porte
+	m_servoMoteur->write(150);
 }
 
 bool Porte::getOuverture() {

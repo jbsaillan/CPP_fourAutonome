@@ -30,8 +30,8 @@ public:
 
   /**
    * @fn operator*()
-   * @brief On surcharge l'operation d emultiplication avec un entier
-     */
+   * @brief On surcharge l'operation de multiplication avec un entier
+   */
   Date operator*(int x) {
     int j = 0;
     //On multiplie les minutes
@@ -46,7 +46,7 @@ public:
 
 
   /**
-   * @fn operator-()
+   * @fn operator-=()
    * @brief On surcharge l'operation de soustraction avec des millisecondes
    */
   Date& operator -=(const int& milli) {
@@ -66,11 +66,17 @@ public:
 
 //private:
 
-	int m_minutes; //<! Nombre de minutes
-	int m_heures; //<! Nombre d'heures
+	int m_minutes; //<! Variable membre représentant le nombre de minutes
+	int m_heures; //<! Variable membre représentant le nombre d'heures
 
 };
 
+
+
+/**
+  * @fn operator-()
+  * @brief On surcharge l'operation de soustraction avec des millisecondes
+  */
 inline Date operator -(const Date & un, const int& milli)
 {
   Date temp = un;

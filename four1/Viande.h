@@ -28,6 +28,22 @@ public:
 	  m_poids = poids;
 	};
 
+ /**
+   * @fn getPoids()
+   * @brief assesseur de l'attribut poids
+     */
+  int getPoids() {
+    return m_poids;
+  }
+
+  /**
+   * @fn setPoids()
+   * @brief assesseur de l'attribut poids
+     */
+  void setPoids(int poids) {
+    if(poids >= 0) m_poids = poids;
+  }
+
 
 private:
 
